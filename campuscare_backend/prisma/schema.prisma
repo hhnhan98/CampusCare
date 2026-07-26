@@ -18,6 +18,21 @@ enum RequestStatus {
   COMPLETED
 }
 
+enum RepairCategory {
+  ELECTRICAL
+  WATER
+  AIR_CONDITIONER
+  INTERNET
+  FURNITURE
+  OTHER
+}
+
+enum RepairPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
 model User {
   id           Int             @id @default(autoincrement())
   username     String          @unique @db.VarChar(50)
@@ -33,23 +48,26 @@ model User {
 }
 
 model RepairRequest {
-  id          Int           @id @default(autoincrement())
-  title       String        @db.VarChar(150)
-  description String        @db.Text
-  category    String        @db.VarChar(100)
-  campus      String        @db.VarChar(100)
-  location    String        @db.VarChar(150)
-  imageUrl    String?       @map("image_url") @db.VarChar(500)
-  status      RequestStatus @default(PENDING)
-  managerNote String?       @map("manager_note") @db.Text
-  createdBy   Int           @map("created_by")
-  createdAt   DateTime      @default(now()) @map("created_at")
-  updatedAt   DateTime      @updatedAt @map("updated_at")
+  id          Int            @id @default(autoincrement())
+  title       String         @db.VarChar(150)
+  description String         @db.Text
+  category    RepairCategory
+  priority    RepairPriority
+  campus      String         @db.VarChar(100)
+  location    String         @db.VarChar(150)
+  imageUrl    String?        @map("image_url") @db.VarChar(500)
+  status      RequestStatus  @default(PENDING)
+  managerNote String?        @map("manager_note") @db.Text
+  createdBy   Int            @map("created_by")
+  createdAt   DateTime       @default(now()) @map("created_at")
+  updatedAt   DateTime       @updatedAt @map("updated_at")
 
   creator User @relation(fields: [createdBy], references: [id], onDelete: Restrict)
 
   @@index([createdBy])
   @@index([status])
+  @@index([category])
+  @@index([priority])
   @@index([createdAt])
   @@map("repair_requests")
 }
