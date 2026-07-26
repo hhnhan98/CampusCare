@@ -13,6 +13,13 @@ repairRequestRouter.get(
   repairRequestController.getRepairRequests,
 );
 
+repairRequestRouter.get(
+  "/:id",
+  authenticate,
+  authorize("USER", "MANAGER"),
+  repairRequestController.getRepairRequestById,
+);
+
 repairRequestRouter.post(
   "/",
   authenticate,

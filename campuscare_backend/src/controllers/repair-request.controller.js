@@ -139,7 +139,50 @@ async function getRepairRequests(req, res, next) {
   }
 }
 
+async function getRepairRequestById(req, res, next) {
+  try {
+    const repairRequestId = Number(req.params.id);
+
+    if (
+      !Number.isInteger(repairRequestId) ||
+      repairRequestId <= 0
+    ) {
+      throw new AppError(
+        "ID yêu cầu không hợp lệ",
+        400,
+        "VALIDATION_ERROR",
+      );
+    }
+
+    const repairRequest =
+      await repairRequestService.getRepairRequestById({
+        repairRequestId,
+        userId: req.user.id,
+        role: req.user.role,
+      });
+
+    if (!repairRequest) {
+      throw new AppError(
+        "Không tìm thấy yêu cầu sửa chữa",
+        404,
+        "NOT_FOUND",
+      );
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Lấy chi tiết yêu cầu sửa chữa thành công",
+      data: {
+        repairRequest,
+      },
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
 export const repairRequestController = {
   createRepairRequest,
-    getRepairRequests,
+  getRepairRequests,
+  getRepairRequestById,
 };

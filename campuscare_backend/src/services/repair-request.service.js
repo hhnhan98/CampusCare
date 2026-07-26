@@ -83,7 +83,50 @@ async function getRepairRequests({ userId, role }) {
   });
 }
 
+async function getRepairRequestById({
+  repairRequestId,
+  userId,
+  role,
+}) {
+  const where = {
+    id: repairRequestId,
+    ...(role === "USER"
+      ? {
+          createdBy: userId,
+        }
+      : {}),
+  };
+
+  return prisma.repairRequest.findFirst({
+    where,
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      category: true,
+      priority: true,
+      campus: true,
+      location: true,
+      imageUrl: true,
+      status: true,
+      managerNote: true,
+      createdAt: true,
+      updatedAt: true,
+      creator: {
+        select: {
+          id: true,
+          username: true,
+          fullName: true,
+          studentCode: true,
+          role: true,
+        },
+      },
+    },
+  });
+}
+
 export const repairRequestService = {
   createRepairRequest,
-    getRepairRequests,
+  getRepairRequests,
+  getRepairRequestById,
 };
