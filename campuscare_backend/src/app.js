@@ -4,9 +4,9 @@ import helmet from "helmet";
 import morgan from "morgan";
 
 import authRouter from "./routes/auth.routes.js";
+import repairRequestRouter from "./routes/repair-request.routes.js";
 import errorMiddleware from "./middlewares/error.middleware.js";
 import notFoundMiddleware from "./middlewares/not-found.middleware.js";
-
 const app = express();
 
 app.use(helmet());
@@ -27,6 +27,7 @@ app.get("/api/health", (req, res) => {
 });
 
 app.use("/api/auth", authRouter);
+app.use("/api/repair-requests", repairRequestRouter);
 
 app.use(notFoundMiddleware);
 app.use(errorMiddleware);

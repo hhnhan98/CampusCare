@@ -1,0 +1,50 @@
+import prisma from "../config/prisma.js";
+
+async function createRepairRequest({
+  title,
+  description,
+  category,
+  priority,
+  campus,
+  location,
+  createdBy,
+}) {
+  return prisma.repairRequest.create({
+    data: {
+      title,
+      description,
+      category,
+      priority,
+      campus,
+      location,
+      createdBy,
+    },
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      category: true,
+      priority: true,
+      campus: true,
+      location: true,
+      imageUrl: true,
+      status: true,
+      managerNote: true,
+      createdAt: true,
+      updatedAt: true,
+      creator: {
+        select: {
+          id: true,
+          username: true,
+          fullName: true,
+          studentCode: true,
+          role: true,
+        },
+      },
+    },
+  });
+}
+
+export const repairRequestService = {
+  createRepairRequest,
+};
