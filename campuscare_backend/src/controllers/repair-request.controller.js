@@ -16,6 +16,12 @@ const ALLOWED_PRIORITIES = [
   "HIGH",
 ];
 
+const ALLOWED_STATUSES = [
+  "PENDING",
+  "IN_PROGRESS",
+  "COMPLETED",
+];
+
 function validateRequiredString(value, fieldName, maxLength) {
   if (typeof value !== "string" || value.trim() === "") {
     throw new AppError(
@@ -181,8 +187,97 @@ async function getRepairRequestById(req, res, next) {
   }
 }
 
+async function updateRepairRequestStatus(req, res, next) {
+  try {
+    const repairRequestId = Number(req.params.id);
+
+    if (
+      !Number.isInteger(repairRequestId) ||
+      repairRequestId <= 0
+    ) {
+      throw new AppError(
+        "ID yêu cầu không hợp lệ",
+        400,
+        "VALIDATION_ERROR",
+      );
+    }
+
+    const { status, managerNote } = req.body;
+
+    if (
+      typeof status !== "string" ||
+      !ALLOWED_STATUSES.includes(status)
+    ) {
+      throw new AppError(
+        "Trạng thái yêu cầu không hợp lệ",
+        400,
+        "VALIDATION_ERROR",
+      );
+    }
+
+    let normalizedManagerNote = null;
+
+    if (managerNote !== undefined && managerNote !== null) {
+      if (typeof managerNote !== "string") {
+        throw new AppError(
+          "Ghi chú xử lý phải là chuỗi",
+          400,
+          "VALIDATION_ERROR",
+        );
+      }
+
+      normalizedManagerNote = managerNote.trim();
+
+      if (normalizedManagerNote.length > 2000) {
+        throw new AppError(
+          "Ghi chú xử lý không được vượt quá 2000 ký tự",
+          400,
+          "VALIDATION_ERROR",
+        );
+      }
+
+      if (normalizedManagerNote === "") {
+        normalizedManagerNote = null;
+      }
+    }
+
+    const existingRepairRequest =
+      await repairRequestService.getRepairRequestById({
+        repairRequestId,
+        userId: req.user.id,
+        role: req.user.role,
+      });
+
+    if (!existingRepairRequest) {
+      throw new AppError(
+        "Không tìm thấy yêu cầu sửa chữa",
+        404,
+        "NOT_FOUND",
+      );
+    }
+
+    const repairRequest =
+      await repairRequestService.updateRepairRequestStatus({
+        repairRequestId,
+        status,
+        managerNote: normalizedManagerNote,
+      });
+
+    return res.status(200).json({
+      success: true,
+      message: "Cập nhật trạng thái yêu cầu sửa chữa thành công",
+      data: {
+        repairRequest,
+      },
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
 export const repairRequestController = {
   createRepairRequest,
   getRepairRequests,
   getRepairRequestById,
+  updateRepairRequestStatus,
 };

@@ -20,6 +20,13 @@ repairRequestRouter.get(
   repairRequestController.getRepairRequestById,
 );
 
+repairRequestRouter.patch(
+  "/:id/status",
+  authenticate,
+  authorize("MANAGER"),
+  repairRequestController.updateRepairRequestStatus,
+);
+
 repairRequestRouter.post(
   "/",
   authenticate,

@@ -125,8 +125,48 @@ async function getRepairRequestById({
   });
 }
 
+async function updateRepairRequestStatus({
+  repairRequestId,
+  status,
+  managerNote,
+}) {
+  return prisma.repairRequest.update({
+    where: {
+      id: repairRequestId,
+    },
+    data: {
+      status,
+      managerNote,
+    },
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      category: true,
+      priority: true,
+      campus: true,
+      location: true,
+      imageUrl: true,
+      status: true,
+      managerNote: true,
+      createdAt: true,
+      updatedAt: true,
+      creator: {
+        select: {
+          id: true,
+          username: true,
+          fullName: true,
+          studentCode: true,
+          role: true,
+        },
+      },
+    },
+  });
+}
+
 export const repairRequestService = {
   createRepairRequest,
   getRepairRequests,
   getRepairRequestById,
+  updateRepairRequestStatus,
 };
