@@ -1,126 +1,17 @@
 import { repairRequestService } from "../services/repair-request.service.js";
+import { repairRequestValidator } from "../validators/repair-request.validator.js";
 import AppError from "../utils/app-error.js";
-
-const ALLOWED_CATEGORIES = [
-  "ELECTRICAL",
-  "WATER",
-  "AIR_CONDITIONER",
-  "INTERNET",
-  "FURNITURE",
-  "OTHER",
-];
-
-const ALLOWED_PRIORITIES = [
-  "LOW",
-  "MEDIUM",
-  "HIGH",
-];
-
-const ALLOWED_STATUSES = [
-  "PENDING",
-  "IN_PROGRESS",
-  "COMPLETED",
-];
-
-const ALLOWED_SORT_FIELDS = [
-  "createdAt",
-  "updatedAt",
-  "priority",
-  "status",
-];
-
-const ALLOWED_SORT_ORDERS = [
-  "asc",
-  "desc",
-];
-
-function validateRequiredString(value, fieldName, maxLength) {
-  if (typeof value !== "string" || value.trim() === "") {
-    throw new AppError(
-      `${fieldName} là bắt buộc`,
-      400,
-      "VALIDATION_ERROR",
-    );
-  }
-
-  const normalizedValue = value.trim();
-
-  if (normalizedValue.length > maxLength) {
-    throw new AppError(
-      `${fieldName} không được vượt quá ${maxLength} ký tự`,
-      400,
-      "VALIDATION_ERROR",
-    );
-  }
-
-  return normalizedValue;
-}
 
 async function createRepairRequest(req, res, next) {
   try {
-    const {
-      title,
-      description,
-      category,
-      priority,
-      campus,
-      location,
-    } = req.body;
-
-    const normalizedTitle = validateRequiredString(
-      title,
-      "Tiêu đề",
-      150,
-    );
-
-    const normalizedDescription = validateRequiredString(
-      description,
-      "Mô tả",
-      2000,
-    );
-
-    const normalizedCampus = validateRequiredString(
-      campus,
-      "Cơ sở",
-      100,
-    );
-
-    const normalizedLocation = validateRequiredString(
-      location,
-      "Vị trí",
-      150,
-    );
-
-    if (
-      typeof category !== "string" ||
-      !ALLOWED_CATEGORIES.includes(category)
-    ) {
-      throw new AppError(
-        "Loại sự cố không hợp lệ",
-        400,
-        "VALIDATION_ERROR",
+    const validatedData =
+      repairRequestValidator.validateCreateRepairRequest(
+        req.body,
       );
-    }
-
-    if (
-      typeof priority !== "string" ||
-      !ALLOWED_PRIORITIES.includes(priority)
-    ) {
-      throw new AppError(
-        "Mức độ ưu tiên không hợp lệ",
-        400,
-        "VALIDATION_ERROR",
-      );
-    }
 
     const repairRequest =
       await repairRequestService.createRepairRequest({
-        title: normalizedTitle,
-        description: normalizedDescription,
-        category,
-        priority,
-        campus: normalizedCampus,
-        location: normalizedLocation,
+        ...validatedData,
         createdBy: req.user.id,
       });
 
@@ -138,119 +29,35 @@ async function createRepairRequest(req, res, next) {
 
 async function getRepairRequests(req, res, next) {
   try {
-    const {
-    status,
-    category,
-    priority,
-    search,
-    sortBy = "createdAt",
-    sortOrder = "desc",
-    } = req.query;
-
-    if (
-      status !== undefined &&
-      !ALLOWED_STATUSES.includes(status)
-    ) {
-      throw new AppError(
-        "Trạng thái lọc không hợp lệ",
-        400,
-        "VALIDATION_ERROR",
+    const filters =
+      repairRequestValidator.validateRepairRequestFilters(
+        req.query,
       );
-    }
-
-    if (
-      category !== undefined &&
-      !ALLOWED_CATEGORIES.includes(category)
-    ) {
-      throw new AppError(
-        "Loại sự cố lọc không hợp lệ",
-        400,
-        "VALIDATION_ERROR",
-      );
-    }
-
-    if (
-      priority !== undefined &&
-      !ALLOWED_PRIORITIES.includes(priority)
-    ) {
-      throw new AppError(
-        "Mức độ ưu tiên lọc không hợp lệ",
-        400,
-        "VALIDATION_ERROR",
-      );
-    }
-
-    if (!ALLOWED_SORT_FIELDS.includes(sortBy)) {
-    throw new AppError(
-        "Trường sắp xếp không hợp lệ",
-        400,
-        "VALIDATION_ERROR",
-    );
-    }
-
-    if (!ALLOWED_SORT_ORDERS.includes(sortOrder)) {
-    throw new AppError(
-        "Thứ tự sắp xếp không hợp lệ",
-        400,
-        "VALIDATION_ERROR",
-    );
-    }    
-
-    let normalizedSearch;
-
-    if (search !== undefined) {
-      if (typeof search !== "string") {
-        throw new AppError(
-          "Từ khóa tìm kiếm không hợp lệ",
-          400,
-          "VALIDATION_ERROR",
-        );
-      }
-
-      normalizedSearch = search.trim();
-
-      if (normalizedSearch.length > 100) {
-        throw new AppError(
-          "Từ khóa tìm kiếm không được vượt quá 100 ký tự",
-          400,
-          "VALIDATION_ERROR",
-        );
-      }
-
-      if (normalizedSearch === "") {
-        normalizedSearch = undefined;
-      }
-    }
 
     const repairRequests =
       await repairRequestService.getRepairRequests({
         userId: req.user.id,
         role: req.user.role,
-        status,
-        category,
-        priority,
-        search: normalizedSearch,
-        sortBy,
-        sortOrder,
+        ...filters,
       });
 
     return res.status(200).json({
-    success: true,
-    message: "Lấy danh sách yêu cầu sửa chữa thành công",
-    data: {
+      success: true,
+      message: "Lấy danh sách yêu cầu sửa chữa thành công",
+      data: {
         repairRequests,
         total: repairRequests.length,
         filters: {
-        status: status ?? null,
-        category: category ?? null,
-        priority: priority ?? null,
-        search: normalizedSearch ?? null,
+          status: filters.status ?? null,
+          category: filters.category ?? null,
+          priority: filters.priority ?? null,
+          search: filters.search ?? null,
         },
         sort: {
-        sortBy,
-        sortOrder,
+          sortBy: filters.sortBy,
+          sortOrder: filters.sortOrder,
         },
-    },
+      },
     });
   } catch (error) {
     return next(error);
@@ -259,18 +66,10 @@ async function getRepairRequests(req, res, next) {
 
 async function getRepairRequestById(req, res, next) {
   try {
-    const repairRequestId = Number(req.params.id);
-
-    if (
-      !Number.isInteger(repairRequestId) ||
-      repairRequestId <= 0
-    ) {
-      throw new AppError(
-        "ID yêu cầu không hợp lệ",
-        400,
-        "VALIDATION_ERROR",
+    const repairRequestId =
+      repairRequestValidator.validateRepairRequestId(
+        req.params.id,
       );
-    }
 
     const repairRequest =
       await repairRequestService.getRepairRequestById({
@@ -299,59 +98,21 @@ async function getRepairRequestById(req, res, next) {
   }
 }
 
-async function updateRepairRequestStatus(req, res, next) {
+async function updateRepairRequestStatus(
+  req,
+  res,
+  next,
+) {
   try {
-    const repairRequestId = Number(req.params.id);
-
-    if (
-      !Number.isInteger(repairRequestId) ||
-      repairRequestId <= 0
-    ) {
-      throw new AppError(
-        "ID yêu cầu không hợp lệ",
-        400,
-        "VALIDATION_ERROR",
+    const repairRequestId =
+      repairRequestValidator.validateRepairRequestId(
+        req.params.id,
       );
-    }
 
-    const { status, managerNote } = req.body;
-
-    if (
-      typeof status !== "string" ||
-      !ALLOWED_STATUSES.includes(status)
-    ) {
-      throw new AppError(
-        "Trạng thái yêu cầu không hợp lệ",
-        400,
-        "VALIDATION_ERROR",
+    const validatedData =
+      repairRequestValidator.validateStatusUpdate(
+        req.body,
       );
-    }
-
-    let normalizedManagerNote = null;
-
-    if (managerNote !== undefined && managerNote !== null) {
-      if (typeof managerNote !== "string") {
-        throw new AppError(
-          "Ghi chú xử lý phải là chuỗi",
-          400,
-          "VALIDATION_ERROR",
-        );
-      }
-
-      normalizedManagerNote = managerNote.trim();
-
-      if (normalizedManagerNote.length > 2000) {
-        throw new AppError(
-          "Ghi chú xử lý không được vượt quá 2000 ký tự",
-          400,
-          "VALIDATION_ERROR",
-        );
-      }
-
-      if (normalizedManagerNote === "") {
-        normalizedManagerNote = null;
-      }
-    }
 
     const existingRepairRequest =
       await repairRequestService.getRepairRequestById({
@@ -371,13 +132,13 @@ async function updateRepairRequestStatus(req, res, next) {
     const repairRequest =
       await repairRequestService.updateRepairRequestStatus({
         repairRequestId,
-        status,
-        managerNote: normalizedManagerNote,
+        ...validatedData,
       });
 
     return res.status(200).json({
       success: true,
-      message: "Cập nhật trạng thái yêu cầu sửa chữa thành công",
+      message:
+        "Cập nhật trạng thái yêu cầu sửa chữa thành công",
       data: {
         repairRequest,
       },
