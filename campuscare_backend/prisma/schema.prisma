@@ -1,0 +1,55 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  MANAGER
+}
+
+enum RequestStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+}
+
+model User {
+  id           Int             @id @default(autoincrement())
+  username     String          @unique @db.VarChar(50)
+  passwordHash String          @map("password_hash") @db.VarChar(255)
+  fullName     String          @map("full_name") @db.VarChar(100)
+  studentCode  String?         @unique @map("student_code") @db.VarChar(30)
+  role         Role            @default(USER)
+  createdAt    DateTime        @default(now()) @map("created_at")
+  updatedAt    DateTime        @updatedAt @map("updated_at")
+  requests     RepairRequest[]
+
+  @@map("users")
+}
+
+model RepairRequest {
+  id          Int           @id @default(autoincrement())
+  title       String        @db.VarChar(150)
+  description String        @db.Text
+  category    String        @db.VarChar(100)
+  campus      String        @db.VarChar(100)
+  location    String        @db.VarChar(150)
+  imageUrl    String?       @map("image_url") @db.VarChar(500)
+  status      RequestStatus @default(PENDING)
+  managerNote String?       @map("manager_note") @db.Text
+  createdBy   Int           @map("created_by")
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+
+  creator User @relation(fields: [createdBy], references: [id], onDelete: Restrict)
+
+  @@index([createdBy])
+  @@index([status])
+  @@index([createdAt])
+  @@map("repair_requests")
+}
