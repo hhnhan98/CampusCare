@@ -118,6 +118,28 @@ async function createRepairRequest(req, res, next) {
   }
 }
 
+async function getRepairRequests(req, res, next) {
+  try {
+    const repairRequests =
+      await repairRequestService.getRepairRequests({
+        userId: req.user.id,
+        role: req.user.role,
+      });
+
+    return res.status(200).json({
+      success: true,
+      message: "Lấy danh sách yêu cầu sửa chữa thành công",
+      data: {
+        repairRequests,
+        total: repairRequests.length,
+      },
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
 export const repairRequestController = {
   createRepairRequest,
+    getRepairRequests,
 };

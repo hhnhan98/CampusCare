@@ -45,6 +45,45 @@ async function createRepairRequest({
   });
 }
 
+async function getRepairRequests({ userId, role }) {
+  const where = role === "USER"
+    ? {
+        createdBy: userId,
+      }
+    : {};
+
+  return prisma.repairRequest.findMany({
+    where,
+    orderBy: {
+      createdAt: "desc",
+    },
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      category: true,
+      priority: true,
+      campus: true,
+      location: true,
+      imageUrl: true,
+      status: true,
+      managerNote: true,
+      createdAt: true,
+      updatedAt: true,
+      creator: {
+        select: {
+          id: true,
+          username: true,
+          fullName: true,
+          studentCode: true,
+          role: true,
+        },
+      },
+    },
+  });
+}
+
 export const repairRequestService = {
   createRepairRequest,
+    getRepairRequests,
 };

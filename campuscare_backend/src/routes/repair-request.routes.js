@@ -6,6 +6,13 @@ import authorize from "../middlewares/authorize.middleware.js";
 
 const repairRequestRouter = Router();
 
+repairRequestRouter.get(
+  "/",
+  authenticate,
+  authorize("USER", "MANAGER"),
+  repairRequestController.getRepairRequests,
+);
+
 repairRequestRouter.post(
   "/",
   authenticate,
