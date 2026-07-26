@@ -7,6 +7,7 @@ async function createRepairRequest({
   priority,
   campus,
   location,
+  imageUrl,
   createdBy,
 }) {
   return prisma.repairRequest.create({
@@ -17,6 +18,7 @@ async function createRepairRequest({
       priority,
       campus,
       location,
+      imageUrl,
       createdBy,
     },
     select: {

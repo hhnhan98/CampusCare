@@ -9,8 +9,13 @@ async function createRepairRequest(req, res, next) {
       req.body,
     );
 
+    const imageUrl = req.file
+      ? `/uploads/repair-requests/${req.file.filename}`
+      : null;
+
     const repairRequest = await repairRequestService.createRepairRequest({
       ...validatedData,
+      imageUrl,
       createdBy: req.user.id,
     });
 
