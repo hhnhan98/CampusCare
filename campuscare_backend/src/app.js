@@ -1,3 +1,6 @@
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
 import cors from "cors";
 import express from "express";
 import helmet from "helmet";
@@ -11,10 +14,17 @@ import repairRequestRouter from "./routes/repair-request.routes.js";
 
 const app = express();
 
+const currentFilePath = fileURLToPath(import.meta.url);
+const currentDirectory = path.dirname(currentFilePath);
+const projectRoot = path.resolve(currentDirectory, "..");
+const uploadsDirectory = path.join(projectRoot, "uploads");
+
 app.use(helmet());
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+app.use("/uploads", express.static(uploadsDirectory));
 
 if (process.env.NODE_ENV === "development") {
   app.use(morgan("dev"));
