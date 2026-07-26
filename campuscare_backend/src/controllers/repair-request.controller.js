@@ -22,6 +22,18 @@ const ALLOWED_STATUSES = [
   "COMPLETED",
 ];
 
+const ALLOWED_SORT_FIELDS = [
+  "createdAt",
+  "updatedAt",
+  "priority",
+  "status",
+];
+
+const ALLOWED_SORT_ORDERS = [
+  "asc",
+  "desc",
+];
+
 function validateRequiredString(value, fieldName, maxLength) {
   if (typeof value !== "string" || value.trim() === "") {
     throw new AppError(
@@ -127,10 +139,12 @@ async function createRepairRequest(req, res, next) {
 async function getRepairRequests(req, res, next) {
   try {
     const {
-      status,
-      category,
-      priority,
-      search,
+    status,
+    category,
+    priority,
+    search,
+    sortBy = "createdAt",
+    sortOrder = "desc",
     } = req.query;
 
     if (
@@ -166,6 +180,22 @@ async function getRepairRequests(req, res, next) {
       );
     }
 
+    if (!ALLOWED_SORT_FIELDS.includes(sortBy)) {
+    throw new AppError(
+        "Trường sắp xếp không hợp lệ",
+        400,
+        "VALIDATION_ERROR",
+    );
+    }
+
+    if (!ALLOWED_SORT_ORDERS.includes(sortOrder)) {
+    throw new AppError(
+        "Thứ tự sắp xếp không hợp lệ",
+        400,
+        "VALIDATION_ERROR",
+    );
+    }    
+
     let normalizedSearch;
 
     if (search !== undefined) {
@@ -200,21 +230,27 @@ async function getRepairRequests(req, res, next) {
         category,
         priority,
         search: normalizedSearch,
+        sortBy,
+        sortOrder,
       });
 
     return res.status(200).json({
-      success: true,
-      message: "Lấy danh sách yêu cầu sửa chữa thành công",
-      data: {
+    success: true,
+    message: "Lấy danh sách yêu cầu sửa chữa thành công",
+    data: {
         repairRequests,
         total: repairRequests.length,
         filters: {
-          status: status ?? null,
-          category: category ?? null,
-          priority: priority ?? null,
-          search: normalizedSearch ?? null,
+        status: status ?? null,
+        category: category ?? null,
+        priority: priority ?? null,
+        search: normalizedSearch ?? null,
         },
-      },
+        sort: {
+        sortBy,
+        sortOrder,
+        },
+    },
     });
   } catch (error) {
     return next(error);

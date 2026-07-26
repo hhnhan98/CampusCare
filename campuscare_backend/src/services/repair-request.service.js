@@ -52,6 +52,8 @@ async function getRepairRequests({
   category,
   priority,
   search,
+  sortBy,
+  sortOrder,
 }) {
   const where = {
     ...(role === "USER"
@@ -109,7 +111,7 @@ async function getRepairRequests({
   return prisma.repairRequest.findMany({
     where,
     orderBy: {
-      createdAt: "desc",
+      [sortBy]: sortOrder,
     },
     select: {
       id: true,
