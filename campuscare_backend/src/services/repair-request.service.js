@@ -54,96 +54,94 @@ async function getRepairRequests({
   search,
   sortBy,
   sortOrder,
+  page,
+  pageSize,
 }) {
-  const where = {
-    ...(role === "USER"
-      ? {
-          createdBy: userId,
-        }
-      : {}),
-    ...(status
-      ? {
-          status,
-        }
-      : {}),
-    ...(category
-      ? {
-          category,
-        }
-      : {}),
-    ...(priority
-      ? {
-          priority,
-        }
-      : {}),
-    ...(search
-      ? {
-          OR: [
-            {
-              title: {
-                contains: search,
-                mode: "insensitive",
-              },
-            },
-            {
-              description: {
-                contains: search,
-                mode: "insensitive",
-              },
-            },
-            {
-              campus: {
-                contains: search,
-                mode: "insensitive",
-              },
-            },
-            {
-              location: {
-                contains: search,
-                mode: "insensitive",
-              },
-            },
-          ],
-        }
-      : {}),
-  };
+  const where = {};
 
-  return prisma.repairRequest.findMany({
-    where,
-    orderBy: {
-      [sortBy]: sortOrder,
-    },
-    select: {
-      id: true,
-      title: true,
-      description: true,
-      category: true,
-      priority: true,
-      campus: true,
-      location: true,
-      imageUrl: true,
-      status: true,
-      managerNote: true,
-      createdAt: true,
-      updatedAt: true,
-      creator: {
-        select: {
-          id: true,
-          username: true,
-          fullName: true,
-          studentCode: true,
-          role: true,
+  if (role === "USER") {
+    where.createdBy = userId;
+  }
+
+  if (status) {
+    where.status = status;
+  }
+
+  if (category) {
+    where.category = category;
+  }
+
+  if (priority) {
+    where.priority = priority;
+  }
+
+  if (search) {
+    where.OR = [
+      {
+        title: {
+          contains: search,
+          mode: "insensitive",
         },
       },
-    },
-  });
+      {
+        description: {
+          contains: search,
+          mode: "insensitive",
+        },
+      },
+      {
+        campus: {
+          contains: search,
+          mode: "insensitive",
+        },
+      },
+      {
+        location: {
+          contains: search,
+          mode: "insensitive",
+        },
+      },
+    ];
+  }
+
+  const skip = (page - 1) * pageSize;
+
+  const [repairRequests, totalItems] = await prisma.$transaction([
+    prisma.repairRequest.findMany({
+      where,
+      skip,
+      take: pageSize,
+      include: {
+        creator: {
+          select: {
+            id: true,
+            username: true,
+            fullName: true,
+            studentCode: true,
+            role: true,
+          },
+        },
+      },
+      orderBy: {
+        [sortBy]: sortOrder,
+      },
+    }),
+
+    prisma.repairRequest.count({
+      where,
+    }),
+  ]);
+
+  const totalPages = Math.ceil(totalItems / pageSize);
+
+  return {
+    repairRequests,
+    totalItems,
+    totalPages,
+  };
 }
 
-async function getRepairRequestById({
-  repairRequestId,
-  userId,
-  role,
-}) {
+async function getRepairRequestById({ repairRequestId, userId, role }) {
   const where = {
     id: repairRequestId,
     ...(role === "USER"
