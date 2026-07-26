@@ -3,10 +3,12 @@ import express from "express";
 import helmet from "helmet";
 import morgan from "morgan";
 
-import authRouter from "./routes/auth.routes.js";
-import repairRequestRouter from "./routes/repair-request.routes.js";
 import errorMiddleware from "./middlewares/error.middleware.js";
 import notFoundMiddleware from "./middlewares/not-found.middleware.js";
+import authRouter from "./routes/auth.routes.js";
+import dashboardRouter from "./routes/dashboard.route.js";
+import repairRequestRouter from "./routes/repair-request.routes.js";
+
 const app = express();
 
 app.use(helmet());
@@ -28,6 +30,7 @@ app.get("/api/health", (req, res) => {
 
 app.use("/api/auth", authRouter);
 app.use("/api/repair-requests", repairRequestRouter);
+app.use("/api/dashboard", dashboardRouter);
 
 app.use(notFoundMiddleware);
 app.use(errorMiddleware);
