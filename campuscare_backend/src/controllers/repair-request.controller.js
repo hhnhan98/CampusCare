@@ -126,10 +126,80 @@ async function createRepairRequest(req, res, next) {
 
 async function getRepairRequests(req, res, next) {
   try {
+    const {
+      status,
+      category,
+      priority,
+      search,
+    } = req.query;
+
+    if (
+      status !== undefined &&
+      !ALLOWED_STATUSES.includes(status)
+    ) {
+      throw new AppError(
+        "Trạng thái lọc không hợp lệ",
+        400,
+        "VALIDATION_ERROR",
+      );
+    }
+
+    if (
+      category !== undefined &&
+      !ALLOWED_CATEGORIES.includes(category)
+    ) {
+      throw new AppError(
+        "Loại sự cố lọc không hợp lệ",
+        400,
+        "VALIDATION_ERROR",
+      );
+    }
+
+    if (
+      priority !== undefined &&
+      !ALLOWED_PRIORITIES.includes(priority)
+    ) {
+      throw new AppError(
+        "Mức độ ưu tiên lọc không hợp lệ",
+        400,
+        "VALIDATION_ERROR",
+      );
+    }
+
+    let normalizedSearch;
+
+    if (search !== undefined) {
+      if (typeof search !== "string") {
+        throw new AppError(
+          "Từ khóa tìm kiếm không hợp lệ",
+          400,
+          "VALIDATION_ERROR",
+        );
+      }
+
+      normalizedSearch = search.trim();
+
+      if (normalizedSearch.length > 100) {
+        throw new AppError(
+          "Từ khóa tìm kiếm không được vượt quá 100 ký tự",
+          400,
+          "VALIDATION_ERROR",
+        );
+      }
+
+      if (normalizedSearch === "") {
+        normalizedSearch = undefined;
+      }
+    }
+
     const repairRequests =
       await repairRequestService.getRepairRequests({
         userId: req.user.id,
         role: req.user.role,
+        status,
+        category,
+        priority,
+        search: normalizedSearch,
       });
 
     return res.status(200).json({
@@ -138,6 +208,12 @@ async function getRepairRequests(req, res, next) {
       data: {
         repairRequests,
         total: repairRequests.length,
+        filters: {
+          status: status ?? null,
+          category: category ?? null,
+          priority: priority ?? null,
+          search: normalizedSearch ?? null,
+        },
       },
     });
   } catch (error) {
