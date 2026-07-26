@@ -1,6 +1,7 @@
 import { repairRequestService } from "../services/repair-request.service.js";
 import { repairRequestValidator } from "../validators/repair-request.validator.js";
 import AppError from "../utils/app-error.js";
+import { apiResponse } from "../utils/api-response.js";
 
 async function createRepairRequest(req, res, next) {
   try {
@@ -15,12 +16,12 @@ async function createRepairRequest(req, res, next) {
         createdBy: req.user.id,
       });
 
-    return res.status(201).json({
-      success: true,
-      message: "Tạo yêu cầu sửa chữa thành công",
-      data: {
+    return apiResponse.sendSuccess(res, {
+    statusCode: 201,
+    message: "Tạo yêu cầu sửa chữa thành công",
+    data: {
         repairRequest,
-      },
+    },
     });
   } catch (error) {
     return next(error);
@@ -41,23 +42,22 @@ async function getRepairRequests(req, res, next) {
         ...filters,
       });
 
-    return res.status(200).json({
-      success: true,
-      message: "Lấy danh sách yêu cầu sửa chữa thành công",
-      data: {
+    return apiResponse.sendSuccess(res, {
+    message: "Lấy danh sách yêu cầu sửa chữa thành công",
+    data: {
         repairRequests,
         total: repairRequests.length,
         filters: {
-          status: filters.status ?? null,
-          category: filters.category ?? null,
-          priority: filters.priority ?? null,
-          search: filters.search ?? null,
+        status: filters.status ?? null,
+        category: filters.category ?? null,
+        priority: filters.priority ?? null,
+        search: filters.search ?? null,
         },
         sort: {
-          sortBy: filters.sortBy,
-          sortOrder: filters.sortOrder,
+        sortBy: filters.sortBy,
+        sortOrder: filters.sortOrder,
         },
-      },
+    },
     });
   } catch (error) {
     return next(error);
@@ -86,12 +86,11 @@ async function getRepairRequestById(req, res, next) {
       );
     }
 
-    return res.status(200).json({
-      success: true,
-      message: "Lấy chi tiết yêu cầu sửa chữa thành công",
-      data: {
+    return apiResponse.sendSuccess(res, {
+    message: "Lấy chi tiết yêu cầu sửa chữa thành công",
+    data: {
         repairRequest,
-      },
+    },
     });
   } catch (error) {
     return next(error);
@@ -135,13 +134,11 @@ async function updateRepairRequestStatus(
         ...validatedData,
       });
 
-    return res.status(200).json({
-      success: true,
-      message:
-        "Cập nhật trạng thái yêu cầu sửa chữa thành công",
-      data: {
+    return apiResponse.sendSuccess(res, {
+    message: "Cập nhật trạng thái yêu cầu sửa chữa thành công",
+    data: {
         repairRequest,
-      },
+    },
     });
   } catch (error) {
     return next(error);
