@@ -186,35 +186,43 @@ function validateStatusUpdate(body) {
     );
   }
 
-  let normalizedManagerNote = null;
+  let normalizedManagerNote;
 
-  if (managerNote !== undefined && managerNote !== null) {
-    if (typeof managerNote !== "string") {
-      throw new AppError(
-        "Ghi chú xử lý phải là chuỗi",
-        400,
-        "VALIDATION_ERROR",
-      );
-    }
-
-    normalizedManagerNote = managerNote.trim();
-
-    if (normalizedManagerNote.length > 2000) {
-      throw new AppError(
-        "Ghi chú xử lý không được vượt quá 2000 ký tự",
-        400,
-        "VALIDATION_ERROR",
-      );
-    }
-
-    if (normalizedManagerNote === "") {
+  if (managerNote !== undefined) {
+    if (managerNote === null) {
       normalizedManagerNote = null;
+    } else {
+      if (typeof managerNote !== "string") {
+        throw new AppError(
+          "Ghi chú xử lý phải là chuỗi",
+          400,
+          "VALIDATION_ERROR",
+        );
+      }
+
+      normalizedManagerNote = managerNote.trim();
+
+      if (normalizedManagerNote.length > 2000) {
+        throw new AppError(
+          "Ghi chú xử lý không được vượt quá 2000 ký tự",
+          400,
+          "VALIDATION_ERROR",
+        );
+      }
+
+      if (normalizedManagerNote === "") {
+        normalizedManagerNote = null;
+      }
     }
   }
 
   return {
     status,
-    managerNote: normalizedManagerNote,
+    ...(managerNote !== undefined
+      ? {
+          managerNote: normalizedManagerNote,
+        }
+      : {}),
   };
 }
 

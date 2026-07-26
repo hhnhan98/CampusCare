@@ -190,7 +190,11 @@ async function updateRepairRequestStatus({
     },
     data: {
       status,
-      managerNote,
+      ...(managerNote !== undefined
+        ? {
+            managerNote,
+          }
+        : {}),
     },
     select: {
       id: true,
