@@ -45,3 +45,7 @@ campuscare_backend/uploads/*
 # Logs
 logs/
 *.log
+
+# Local editor history
+.history/
+**/.history/
