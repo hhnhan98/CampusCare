@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/router/app_router.dart';
 import '../../../auth/presentation/controllers/auth_controller.dart';
+import '../../../repair_request/presentation/controllers/repair_request_list_controller.dart';
 
 class DashboardPage extends ConsumerWidget {
   const DashboardPage({super.key});
@@ -18,12 +19,17 @@ class DashboardPage extends ConsumerWidget {
     context.go(AppRoutes.login);
   }
 
-  Future<void> _openCreateRepairRequest(BuildContext context) async {
+  Future<void> _openCreateRepairRequest(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
     final isCreated = await context.push<bool>(AppRoutes.createRepairRequest);
 
     if (!context.mounted || isCreated != true) {
       return;
     }
+
+    ref.invalidate(repairRequestListControllerProvider);
 
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
@@ -83,7 +89,7 @@ class DashboardPage extends ConsumerWidget {
                     width: double.infinity,
                     height: 52,
                     child: FilledButton.icon(
-                      onPressed: () => _openCreateRepairRequest(context),
+                      onPressed: () => _openCreateRepairRequest(context, ref),
                       icon: const Icon(Icons.add_circle_outline),
                       label: const Text('Tạo yêu cầu sửa chữa'),
                     ),
