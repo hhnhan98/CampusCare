@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../data/models/repair_category.dart';
 import '../../data/models/repair_priority.dart';
@@ -16,7 +19,10 @@ class CreateRepairRequestPage extends ConsumerStatefulWidget {
 
 class _CreateRepairRequestPageState
     extends ConsumerState<CreateRepairRequestPage> {
+  static const int _maxImageSizeInBytes = 5 * 1024 * 1024;
+
   final _formKey = GlobalKey<FormState>();
+  final _imagePicker = ImagePicker();
 
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
@@ -25,6 +31,7 @@ class _CreateRepairRequestPageState
 
   RepairCategory? _selectedCategory;
   RepairPriority? _selectedPriority;
+  XFile? _selectedImage;
 
   @override
   void dispose() {
@@ -33,6 +40,44 @@ class _CreateRepairRequestPageState
     _campusController.dispose();
     _locationController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickImage() async {
+    try {
+      final image = await _imagePicker.pickImage(source: ImageSource.gallery);
+
+      if (image == null) {
+        return;
+      }
+
+      final extension = _fileExtension(image.path);
+
+      if (extension != 'jpg' && extension != 'jpeg' && extension != 'png') {
+        _showMessage('Chỉ chấp nhận ảnh JPG, JPEG hoặc PNG');
+        return;
+      }
+
+      final imageSize = await image.length();
+
+      if (imageSize > _maxImageSizeInBytes) {
+        _showMessage('Ảnh không được vượt quá 5 MB');
+        return;
+      }
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _selectedImage = image;
+      });
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+
+      _showMessage('Không thể chọn ảnh. Vui lòng thử lại.');
+    }
   }
 
   Future<void> _submitForm() async {
@@ -60,7 +105,14 @@ class _CreateRepairRequestPageState
           priority: priority,
           campus: _campusController.text.trim(),
           location: _locationController.text.trim(),
+          imagePath: _selectedImage?.path,
         );
+  }
+
+  void _removeImage() {
+    setState(() {
+      _selectedImage = null;
+    });
   }
 
   void _resetForm() {
@@ -74,9 +126,27 @@ class _CreateRepairRequestPageState
     setState(() {
       _selectedCategory = null;
       _selectedPriority = null;
+      _selectedImage = null;
     });
 
     ref.read(createRepairRequestControllerProvider.notifier).reset();
+  }
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  String _fileExtension(String path) {
+    final fileName = path.split(RegExp(r'[/\\]')).last;
+    final separatorIndex = fileName.lastIndexOf('.');
+
+    if (separatorIndex == -1 || separatorIndex == fileName.length - 1) {
+      return '';
+    }
+
+    return fileName.substring(separatorIndex + 1).toLowerCase();
   }
 
   String? _validateRequiredText(
@@ -129,22 +199,14 @@ class _CreateRepairRequestPageState
         final createRequestState = next.value;
 
         if (createRequestState?.status == CreateRepairRequestStatus.failure) {
-          final message =
-              createRequestState?.errorMessage ??
-              'Không thể tạo yêu cầu sửa chữa';
-
-          ScaffoldMessenger.of(context)
-            ..hideCurrentSnackBar()
-            ..showSnackBar(SnackBar(content: Text(message)));
+          _showMessage(
+            createRequestState?.errorMessage ??
+                'Không thể tạo yêu cầu sửa chữa',
+          );
         }
 
         if (createRequestState?.status == CreateRepairRequestStatus.success) {
-          ScaffoldMessenger.of(context)
-            ..hideCurrentSnackBar()
-            ..showSnackBar(
-              const SnackBar(content: Text('Tạo yêu cầu sửa chữa thành công')),
-            );
-
+          _showMessage('Tạo yêu cầu sửa chữa thành công');
           _resetForm();
         }
       },
@@ -303,6 +365,67 @@ class _CreateRepairRequestPageState
                 ),
                 onFieldSubmitted: isLoading ? null : (_) => _submitForm(),
               ),
+              const SizedBox(height: 16),
+              Text(
+                'Ảnh sự cố (không bắt buộc)',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Chỉ chấp nhận JPG, JPEG hoặc PNG, tối đa 5 MB.',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 12),
+              if (_selectedImage == null)
+                OutlinedButton.icon(
+                  onPressed: isLoading ? null : _pickImage,
+                  icon: const Icon(Icons.add_photo_alternate_outlined),
+                  label: const Text('Chọn ảnh từ thư viện'),
+                )
+              else
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.file(
+                        File(_selectedImage!.path),
+                        height: 220,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return const SizedBox(
+                            height: 160,
+                            child: Center(
+                              child: Text('Không thể hiển thị ảnh đã chọn'),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: isLoading ? null : _pickImage,
+                            icon: const Icon(Icons.refresh),
+                            label: const Text('Chọn lại'),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: TextButton.icon(
+                            onPressed: isLoading ? null : _removeImage,
+                            icon: const Icon(Icons.delete_outline),
+                            label: const Text('Xóa ảnh'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               const SizedBox(height: 24),
               SizedBox(
                 height: 52,
