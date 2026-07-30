@@ -56,10 +56,6 @@ class CreateRepairRequestController
     }
   }
 
-  void reset() {
-    state = const AsyncData(CreateRepairRequestState());
-  }
-
   String _extractErrorMessage(Object error) {
     if (error is ApiException) {
       return error.message;
