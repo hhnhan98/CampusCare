@@ -7,16 +7,28 @@ import {
 } from "../constants/repair-request.constants.js";
 import AppError from "../utils/app-error.js";
 
+const STATUS_LABELS = {
+  PENDING: "Ch? x? l?",
+  IN_PROGRESS: "?ang x? l?",
+  COMPLETED: "?? ho?n th?nh",
+};
+
+const ALLOWED_STATUS_TRANSITIONS = {
+  PENDING: ["PENDING", "IN_PROGRESS"],
+  IN_PROGRESS: ["IN_PROGRESS", "COMPLETED"],
+  COMPLETED: ["COMPLETED"],
+};
+
 function validateRequiredString(value, fieldName, maxLength) {
   if (typeof value !== "string" || value.trim() === "") {
-    throw new AppError(`${fieldName} là bắt buộc`, 400, "VALIDATION_ERROR");
+    throw new AppError(`${fieldName} l? b?t bu?c`, 400, "VALIDATION_ERROR");
   }
 
   const normalizedValue = value.trim();
 
   if (normalizedValue.length > maxLength) {
     throw new AppError(
-      `${fieldName} không được vượt quá ${maxLength} ký tự`,
+      `${fieldName} kh?ng ???c v??t qu? ${maxLength} k? t?`,
       400,
       "VALIDATION_ERROR",
     );
@@ -29,7 +41,7 @@ function validateRepairRequestId(id) {
   const repairRequestId = Number(id);
 
   if (!Number.isInteger(repairRequestId) || repairRequestId <= 0) {
-    throw new AppError("ID yêu cầu không hợp lệ", 400, "VALIDATION_ERROR");
+    throw new AppError("ID y?u c?u kh?ng h?p l?", 400, "VALIDATION_ERROR");
   }
 
   return repairRequestId;
@@ -38,24 +50,24 @@ function validateRepairRequestId(id) {
 function validateCreateRepairRequest(body) {
   const { title, description, category, priority, campus, location } = body;
 
-  const normalizedTitle = validateRequiredString(title, "Tiêu đề", 150);
+  const normalizedTitle = validateRequiredString(title, "Ti?u ??", 150);
 
   const normalizedDescription = validateRequiredString(
     description,
-    "Mô tả",
+    "M? t?",
     2000,
   );
 
-  const normalizedCampus = validateRequiredString(campus, "Cơ sở", 100);
+  const normalizedCampus = validateRequiredString(campus, "C? s?", 100);
 
-  const normalizedLocation = validateRequiredString(location, "Vị trí", 150);
+  const normalizedLocation = validateRequiredString(location, "V? tr?", 150);
 
   if (typeof category !== "string" || !ALLOWED_CATEGORIES.includes(category)) {
-    throw new AppError("Loại sự cố không hợp lệ", 400, "VALIDATION_ERROR");
+    throw new AppError("Lo?i s? c? kh?ng h?p l?", 400, "VALIDATION_ERROR");
   }
 
   if (typeof priority !== "string" || !ALLOWED_PRIORITIES.includes(priority)) {
-    throw new AppError("Mức độ ưu tiên không hợp lệ", 400, "VALIDATION_ERROR");
+    throw new AppError("M?c ?? ?u ti?n kh?ng h?p l?", 400, "VALIDATION_ERROR");
   }
 
   return {
@@ -79,27 +91,27 @@ function validateRepairRequestFilters(query) {
   } = query;
 
   if (status !== undefined && !ALLOWED_STATUSES.includes(status)) {
-    throw new AppError("Trạng thái lọc không hợp lệ", 400, "VALIDATION_ERROR");
+    throw new AppError("Tr?ng th?i l?c kh?ng h?p l?", 400, "VALIDATION_ERROR");
   }
 
   if (category !== undefined && !ALLOWED_CATEGORIES.includes(category)) {
-    throw new AppError("Loại sự cố lọc không hợp lệ", 400, "VALIDATION_ERROR");
+    throw new AppError("Lo?i s? c? l?c kh?ng h?p l?", 400, "VALIDATION_ERROR");
   }
 
   if (priority !== undefined && !ALLOWED_PRIORITIES.includes(priority)) {
     throw new AppError(
-      "Mức độ ưu tiên lọc không hợp lệ",
+      "M?c ?? ?u ti?n l?c kh?ng h?p l?",
       400,
       "VALIDATION_ERROR",
     );
   }
 
   if (!ALLOWED_SORT_FIELDS.includes(sortBy)) {
-    throw new AppError("Trường sắp xếp không hợp lệ", 400, "VALIDATION_ERROR");
+    throw new AppError("Tr??ng s?p x?p kh?ng h?p l?", 400, "VALIDATION_ERROR");
   }
 
   if (!ALLOWED_SORT_ORDERS.includes(sortOrder)) {
-    throw new AppError("Thứ tự sắp xếp không hợp lệ", 400, "VALIDATION_ERROR");
+    throw new AppError("Th? t? s?p x?p kh?ng h?p l?", 400, "VALIDATION_ERROR");
   }
 
   let normalizedSearch;
@@ -107,7 +119,7 @@ function validateRepairRequestFilters(query) {
   if (search !== undefined) {
     if (typeof search !== "string") {
       throw new AppError(
-        "Từ khóa tìm kiếm không hợp lệ",
+        "T? kh?a t?m ki?m kh?ng h?p l?",
         400,
         "VALIDATION_ERROR",
       );
@@ -117,7 +129,7 @@ function validateRepairRequestFilters(query) {
 
     if (normalizedSearch.length > 100) {
       throw new AppError(
-        "Từ khóa tìm kiếm không được vượt quá 100 ký tự",
+        "T? kh?a t?m ki?m kh?ng ???c v??t qu? 100 k? t?",
         400,
         "VALIDATION_ERROR",
       );
@@ -127,6 +139,7 @@ function validateRepairRequestFilters(query) {
       normalizedSearch = undefined;
     }
   }
+
   return {
     status,
     category,
@@ -149,7 +162,7 @@ function validatePagination(query) {
     page = Number(query.page);
 
     if (!Number.isInteger(page) || page <= 0) {
-      throw new AppError("Số trang không hợp lệ", 400, "VALIDATION_ERROR");
+      throw new AppError("S? trang kh?ng h?p l?", 400, "VALIDATION_ERROR");
     }
   }
 
@@ -162,7 +175,7 @@ function validatePagination(query) {
       pageSize > MAX_PAGE_SIZE
     ) {
       throw new AppError(
-        "Kích thước trang không hợp lệ",
+        "K?ch th??c trang kh?ng h?p l?",
         400,
         "VALIDATION_ERROR",
       );
@@ -180,7 +193,7 @@ function validateStatusUpdate(body) {
 
   if (typeof status !== "string" || !ALLOWED_STATUSES.includes(status)) {
     throw new AppError(
-      "Trạng thái yêu cầu không hợp lệ",
+      "Tr?ng th?i y?u c?u kh?ng h?p l?",
       400,
       "VALIDATION_ERROR",
     );
@@ -194,7 +207,7 @@ function validateStatusUpdate(body) {
     } else {
       if (typeof managerNote !== "string") {
         throw new AppError(
-          "Ghi chú xử lý phải là chuỗi",
+          "Ghi ch? x? l? ph?i l? chu?i",
           400,
           "VALIDATION_ERROR",
         );
@@ -204,7 +217,7 @@ function validateStatusUpdate(body) {
 
       if (normalizedManagerNote.length > 2000) {
         throw new AppError(
-          "Ghi chú xử lý không được vượt quá 2000 ký tự",
+          "Ghi ch? x? l? kh?ng ???c v??t qu? 2000 k? t?",
           400,
           "VALIDATION_ERROR",
         );
@@ -226,10 +239,26 @@ function validateStatusUpdate(body) {
   };
 }
 
+function validateStatusTransition(currentStatus, nextStatus) {
+  const allowedNextStatuses = ALLOWED_STATUS_TRANSITIONS[currentStatus];
+
+  if (!allowedNextStatuses || !allowedNextStatuses.includes(nextStatus)) {
+    const currentLabel = STATUS_LABELS[currentStatus] ?? currentStatus;
+    const nextLabel = STATUS_LABELS[nextStatus] ?? nextStatus;
+
+    throw new AppError(
+      `Kh?ng th? chuy?n tr?ng th?i t? ${currentLabel} sang ${nextLabel}`,
+      409,
+      "INVALID_STATUS_TRANSITION",
+    );
+  }
+}
+
 export const repairRequestValidator = {
   validateRepairRequestId,
   validateCreateRepairRequest,
   validateRepairRequestFilters,
   validateStatusUpdate,
+  validateStatusTransition,
   validatePagination,
 };
