@@ -119,6 +119,11 @@ async function updateRepairRequestStatus(req, res, next) {
       throw new AppError("Không tìm thấy yêu cầu sửa chữa", 404, "NOT_FOUND");
     }
 
+    repairRequestValidator.validateStatusTransition(
+      existingRepairRequest.status,
+      validatedData.status,
+    );
+
     const repairRequest = await repairRequestService.updateRepairRequestStatus({
       repairRequestId,
       ...validatedData,
