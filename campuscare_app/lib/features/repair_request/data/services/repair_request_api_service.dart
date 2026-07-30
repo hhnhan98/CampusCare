@@ -67,10 +67,7 @@ class RepairRequestApiService {
   }) async {
     final response = await _dio.patch<Map<String, dynamic>>(
       '$_repairRequestsPath/$id/status',
-      data: {
-        'status': status.toJson(),
-        if (managerNote != null) 'managerNote': managerNote,
-      },
+      data: {'status': status.toJson(), 'managerNote': managerNote},
     );
 
     return RepairRequestDetailResponse.fromJson(_requireResponseData(response));

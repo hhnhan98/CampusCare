@@ -59,4 +59,27 @@ void main() {
       throwsFormatException,
     );
   });
+
+  test('parses manager with null student code', () {
+    final response = LoginResponse.fromJson({
+      'success': true,
+      'message': '??ng nh?p th?nh c?ng',
+      'data': {
+        'accessToken': 'manager-token',
+        'tokenType': 'Bearer',
+        'expiresIn': '7d',
+        'user': {
+          'id': 2,
+          'username': 'manager01',
+          'fullName': 'Qu?n l? C? s? v?t ch?t',
+          'studentCode': null,
+          'role': 'MANAGER',
+        },
+      },
+    });
+
+    expect(response.user.username, 'manager01');
+    expect(response.user.studentCode, isNull);
+    expect(response.user.role, 'MANAGER');
+  });
 }

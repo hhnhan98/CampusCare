@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../auth/presentation/controllers/auth_controller.dart';
 import '../../data/models/repair_request.dart';
 import '../controllers/repair_request_detail_controller.dart';
+import '../widgets/manager_repair_request_update_section.dart';
 
 class RepairRequestDetailPage extends ConsumerWidget {
   const RepairRequestDetailPage({required this.repairRequestId, super.key});
@@ -14,6 +16,8 @@ class RepairRequestDetailPage extends ConsumerWidget {
     final detailAsyncState = ref.watch(
       repairRequestDetailProvider(repairRequestId),
     );
+    final isManager =
+        ref.watch(authControllerProvider).value?.isManager ?? false;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Chi tiết yêu cầu')),
@@ -26,6 +30,7 @@ class RepairRequestDetailPage extends ConsumerWidget {
         ),
         data: (repairRequest) => _DetailContent(
           repairRequest: repairRequest,
+          isManager: isManager,
           onRefresh: () async {
             ref.invalidate(repairRequestDetailProvider(repairRequestId));
 
@@ -38,9 +43,14 @@ class RepairRequestDetailPage extends ConsumerWidget {
 }
 
 class _DetailContent extends StatelessWidget {
-  const _DetailContent({required this.repairRequest, required this.onRefresh});
+  const _DetailContent({
+    required this.repairRequest,
+    required this.isManager,
+    required this.onRefresh,
+  });
 
   final RepairRequest repairRequest;
+  final bool isManager;
   final Future<void> Function() onRefresh;
 
   @override
@@ -170,6 +180,10 @@ class _DetailContent extends StatelessWidget {
               ),
             ),
           ],
+          if (isManager) ...[
+            const SizedBox(height: 16),
+            ManagerRepairRequestUpdateSection(repairRequest: repairRequest),
+          ],
           const SizedBox(height: 16),
           _SectionCard(
             title: 'Người gửi',
@@ -219,8 +233,6 @@ class _DetailContent extends StatelessWidget {
       'pending' => 'Chờ xử lý',
       'inProgress' => 'Đang xử lý',
       'completed' => 'Đã hoàn thành',
-      'rejected' => 'Đã từ chối',
-      'cancelled' => 'Đã hủy',
       _ => statusName,
     };
   }
