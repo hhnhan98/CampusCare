@@ -1,9 +1,11 @@
 import 'package:go_router/go_router.dart';
+import 'package:flutter/material.dart';
 
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/splash_page.dart';
 import '../../features/dashboard/presentation/pages/dashboard_page.dart';
 import '../../features/repair_request/presentation/pages/create_repair_request_page.dart';
+import '../../features/repair_request/presentation/pages/repair_request_detail_page.dart';
 import '../../features/repair_request/presentation/pages/repair_request_list_page.dart';
 
 abstract final class AppRoutes {
@@ -12,6 +14,7 @@ abstract final class AppRoutes {
   static const String dashboard = '/dashboard';
   static const String repairRequests = '/repair-requests';
   static const String createRepairRequest = '/repair-requests/create';
+  static const String repairRequestDetail = '/repair-requests/:id';
 
   AppRoutes._();
 }
@@ -43,6 +46,21 @@ final GoRouter appRouter = GoRouter(
       path: AppRoutes.createRepairRequest,
       name: 'create-repair-request',
       builder: (context, state) => const CreateRepairRequestPage(),
+    ),
+    GoRoute(
+      path: AppRoutes.repairRequestDetail,
+      name: 'repair-request-detail',
+      builder: (context, state) {
+        final repairRequestId = int.tryParse(state.pathParameters['id'] ?? '');
+
+        if (repairRequestId == null) {
+          return const Scaffold(
+            body: Center(child: Text('Invalid repair request ID')),
+          );
+        }
+
+        return RepairRequestDetailPage(repairRequestId: repairRequestId);
+      },
     ),
   ],
 );
