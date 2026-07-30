@@ -27,21 +27,21 @@ class RepairRequestListResponse {
 class RepairRequestPagination {
   const RepairRequestPagination({
     required this.page,
-    required this.limit,
-    required this.total,
+    required this.pageSize,
+    required this.totalItems,
     required this.totalPages,
   });
 
   final int page;
-  final int limit;
-  final int total;
+  final int pageSize;
+  final int totalItems;
   final int totalPages;
 
   factory RepairRequestPagination.fromJson(Map<String, dynamic> json) {
     return RepairRequestPagination(
       page: json['page'] as int,
-      limit: json['limit'] as int,
-      total: json['total'] as int,
+      pageSize: json['pageSize'] as int,
+      totalItems: json['totalItems'] as int,
       totalPages: json['totalPages'] as int,
     );
   }
