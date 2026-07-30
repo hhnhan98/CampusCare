@@ -32,6 +32,10 @@ class DashboardPage extends ConsumerWidget {
       );
   }
 
+  void _openRepairRequests(BuildContext context) {
+    context.push(AppRoutes.repairRequests);
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
@@ -82,6 +86,16 @@ class DashboardPage extends ConsumerWidget {
                       onPressed: () => _openCreateRepairRequest(context),
                       icon: const Icon(Icons.add_circle_outline),
                       label: const Text('Tạo yêu cầu sửa chữa'),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 52,
+                    child: OutlinedButton.icon(
+                      onPressed: () => _openRepairRequests(context),
+                      icon: const Icon(Icons.list_alt_outlined),
+                      label: const Text('Xem yêu cầu đã gửi'),
                     ),
                   ),
                 ],
