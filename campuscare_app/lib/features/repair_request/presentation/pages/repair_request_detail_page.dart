@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/network/api_constants.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../auth/presentation/controllers/auth_controller.dart';
@@ -55,7 +56,7 @@ class _DetailContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final imageUrl = repairRequest.imageUrl?.trim();
+    final imageUrl = ApiConstants.resolveResourceUrl(repairRequest.imageUrl);
     final managerNote = repairRequest.managerNote?.trim();
 
     return RefreshIndicator(
