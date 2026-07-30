@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../data/models/repair_category.dart';
@@ -115,23 +116,6 @@ class _CreateRepairRequestPageState
     });
   }
 
-  void _resetForm() {
-    _formKey.currentState?.reset();
-
-    _titleController.clear();
-    _descriptionController.clear();
-    _campusController.clear();
-    _locationController.clear();
-
-    setState(() {
-      _selectedCategory = null;
-      _selectedPriority = null;
-      _selectedImage = null;
-    });
-
-    ref.read(createRepairRequestControllerProvider.notifier).reset();
-  }
-
   void _showMessage(String message) {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
@@ -206,8 +190,7 @@ class _CreateRepairRequestPageState
         }
 
         if (createRequestState?.status == CreateRepairRequestStatus.success) {
-          _showMessage('Tạo yêu cầu sửa chữa thành công');
-          _resetForm();
+          context.pop(true);
         }
       },
     );

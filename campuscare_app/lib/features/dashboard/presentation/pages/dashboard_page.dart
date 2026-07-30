@@ -18,8 +18,18 @@ class DashboardPage extends ConsumerWidget {
     context.go(AppRoutes.login);
   }
 
-  void _openCreateRepairRequest(BuildContext context) {
-    context.push(AppRoutes.createRepairRequest);
+  Future<void> _openCreateRepairRequest(BuildContext context) async {
+    final isCreated = await context.push<bool>(AppRoutes.createRepairRequest);
+
+    if (!context.mounted || isCreated != true) {
+      return;
+    }
+
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        const SnackBar(content: Text('Tạo yêu cầu sửa chữa thành công')),
+      );
   }
 
   @override
