@@ -7,7 +7,9 @@
   "scripts": {
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
-    "db:test": "node --env-file=.env src/scripts/test-database.js"
+    "db:test": "node --env-file=.env src/scripts/test-database.js",
+    "seed": "node --env-file=.env prisma/seed.js",
+    "seed:demo": "node --env-file=.env prisma/demo-seed.js"
   },
   "keywords": [
     "campuscare",

@@ -20,21 +20,40 @@ async function main() {
     bcrypt.hash(managerPassword, SALT_ROUNDS),
   ]);
 
-  const user = await prisma.user.upsert({
+  const student01 = await prisma.user.upsert({
     where: {
       username: "student01",
     },
     update: {
       passwordHash: userPasswordHash,
-      fullName: "Nguyễn Văn Sinh Viên",
+      fullName: "Nguy\u1ec5n V\u0103n Sinh Vi\u00ean",
       studentCode: "2280600001",
       role: "USER",
     },
     create: {
       username: "student01",
       passwordHash: userPasswordHash,
-      fullName: "Nguyễn Văn Sinh Viên",
+      fullName: "Nguy\u1ec5n V\u0103n Sinh Vi\u00ean",
       studentCode: "2280600001",
+      role: "USER",
+    },
+  });
+
+  const student02 = await prisma.user.upsert({
+    where: {
+      username: "student02",
+    },
+    update: {
+      passwordHash: userPasswordHash,
+      fullName: "Tr\u1ea7n Th\u1ecb Minh Anh",
+      studentCode: "2280600002",
+      role: "USER",
+    },
+    create: {
+      username: "student02",
+      passwordHash: userPasswordHash,
+      fullName: "Tr\u1ea7n Th\u1ecb Minh Anh",
+      studentCode: "2280600002",
       role: "USER",
     },
   });
@@ -45,14 +64,14 @@ async function main() {
     },
     update: {
       passwordHash: managerPasswordHash,
-      fullName: "Quản lý Cơ sở vật chất",
+      fullName: "Qu\u1ea3n l\u00fd C\u01a1 s\u1edf v\u1eadt ch\u1ea5t",
       studentCode: null,
       role: "MANAGER",
     },
     create: {
       username: "manager01",
       passwordHash: managerPasswordHash,
-      fullName: "Quản lý Cơ sở vật chất",
+      fullName: "Qu\u1ea3n l\u00fd C\u01a1 s\u1edf v\u1eadt ch\u1ea5t",
       studentCode: null,
       role: "MANAGER",
     },
@@ -60,20 +79,14 @@ async function main() {
 
   console.log("Seed completed successfully.");
 
-  console.table([
-    {
+  console.table(
+    [student01, student02, manager].map((user) => ({
       id: user.id,
       username: user.username,
       role: user.role,
       studentCode: user.studentCode,
-    },
-    {
-      id: manager.id,
-      username: manager.username,
-      role: manager.role,
-      studentCode: manager.studentCode,
-    },
-  ]);
+    })),
+  );
 }
 
 main()
