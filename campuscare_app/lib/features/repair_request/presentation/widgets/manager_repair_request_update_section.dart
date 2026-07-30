@@ -26,14 +26,31 @@ class _ManagerRepairRequestUpdateSectionState
   final _formKey = GlobalKey<FormState>();
   final _managerNoteController = TextEditingController();
 
+  late RepairRequestStatus _initialStatus;
+  late String _initialManagerNote;
+
   RepairRequestStatus? _selectedStatus;
+
+  bool get _hasChanges {
+    final selectedStatus = _selectedStatus;
+    final currentManagerNote = _normalizeManagerNote(
+      _managerNoteController.text,
+    );
+
+    if (selectedStatus == null) {
+      return false;
+    }
+
+    return selectedStatus != _initialStatus ||
+        currentManagerNote != _initialManagerNote;
+  }
 
   @override
   void initState() {
     super.initState();
 
-    _selectedStatus = widget.repairRequest.status;
-    _managerNoteController.text = widget.repairRequest.managerNote ?? '';
+    _syncForm(widget.repairRequest);
+    _managerNoteController.addListener(_handleFormChanged);
   }
 
   @override
@@ -44,18 +61,45 @@ class _ManagerRepairRequestUpdateSectionState
       return;
     }
 
-    _selectedStatus = widget.repairRequest.status;
-    _managerNoteController.text = widget.repairRequest.managerNote ?? '';
+    _syncForm(widget.repairRequest);
   }
 
   @override
   void dispose() {
-    _managerNoteController.dispose();
+    _managerNoteController
+      ..removeListener(_handleFormChanged)
+      ..dispose();
+
     super.dispose();
+  }
+
+  void _handleFormChanged() {
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {});
+  }
+
+  void _syncForm(RepairRequest repairRequest) {
+    final managerNote = _normalizeManagerNote(repairRequest.managerNote);
+
+    _initialStatus = repairRequest.status;
+    _initialManagerNote = managerNote;
+    _selectedStatus = repairRequest.status;
+    _managerNoteController.text = managerNote;
+  }
+
+  String _normalizeManagerNote(String? value) {
+    return value?.trim() ?? '';
   }
 
   Future<void> _submitUpdate() async {
     FocusScope.of(context).unfocus();
+
+    if (!_hasChanges) {
+      return;
+    }
 
     final isValid = _formKey.currentState?.validate() ?? false;
 
@@ -97,6 +141,7 @@ class _ManagerRepairRequestUpdateSectionState
     final updateAsyncState = ref.watch(updateRepairRequestControllerProvider);
     final isLoading =
         updateAsyncState.value?.isLoading ?? updateAsyncState.isLoading;
+    final canSubmit = !isLoading && _hasChanges;
 
     ref.listen<AsyncValue<UpdateRepairRequestState>>(
       updateRepairRequestControllerProvider,
@@ -114,9 +159,16 @@ class _ManagerRepairRequestUpdateSectionState
             updateState?.errorMessage ??
                 'Không thể cập nhật yêu cầu. Vui lòng thử lại.',
           );
+          return;
         }
 
         if (currentStatus == UpdateRepairRequestStatus.success) {
+          final updatedRepairRequest = updateState?.repairRequest;
+
+          if (updatedRepairRequest != null) {
+            _syncForm(updatedRepairRequest);
+          }
+
           ref.invalidate(repairRequestDetailProvider(widget.repairRequest.id));
           ref.invalidate(repairRequestListControllerProvider);
 
@@ -198,11 +250,20 @@ class _ManagerRepairRequestUpdateSectionState
                   return null;
                 },
               ),
-              const SizedBox(height: 16),
+              if (!isLoading && !_hasChanges) ...[
+                Text(
+                  'Chưa có thay đổi để lưu.',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ] else
+                const SizedBox(height: 16),
               SizedBox(
                 height: 50,
                 child: FilledButton.icon(
-                  onPressed: isLoading ? null : _submitUpdate,
+                  onPressed: canSubmit ? _submitUpdate : null,
                   icon: isLoading
                       ? const SizedBox(
                           width: 20,
