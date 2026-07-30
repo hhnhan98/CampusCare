@@ -11,9 +11,27 @@ enum RepairRequestStatus {
     return RepairRequestStatus.values.firstWhere(
       (status) => status.apiValue == value,
       orElse: () => throw FormatException(
-        'Trạng thái yêu cầu sửa chữa không hợp lệ: $value',
+        'Tr?ng th?i y?u c?u s?a ch?a kh?ng h?p l?: $value',
       ),
     );
+  }
+
+  List<RepairRequestStatus> get allowedUpdateStatuses {
+    return switch (this) {
+      RepairRequestStatus.pending => const [
+        RepairRequestStatus.pending,
+        RepairRequestStatus.inProgress,
+      ],
+      RepairRequestStatus.inProgress => const [
+        RepairRequestStatus.inProgress,
+        RepairRequestStatus.completed,
+      ],
+      RepairRequestStatus.completed => const [RepairRequestStatus.completed],
+    };
+  }
+
+  bool canTransitionTo(RepairRequestStatus nextStatus) {
+    return allowedUpdateStatuses.contains(nextStatus);
   }
 
   String toJson() => apiValue;

@@ -205,7 +205,7 @@ class _ManagerRepairRequestUpdateSectionState
                   labelText: 'Trạng thái',
                   prefixIcon: Icon(Icons.sync_alt_outlined),
                 ),
-                items: RepairRequestStatus.values
+                items: widget.repairRequest.status.allowedUpdateStatuses
                     .map(
                       (status) => DropdownMenuItem(
                         value: status,
