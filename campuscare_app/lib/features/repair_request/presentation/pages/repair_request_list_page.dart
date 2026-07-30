@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../core/router/app_router.dart';
 import '../../data/models/repair_request.dart';
 import '../controllers/repair_request_list_controller.dart';
 import '../states/repair_request_list_state.dart';
@@ -74,8 +76,13 @@ class _RepairRequestListContent extends StatelessWidget {
         },
         itemBuilder: (context, index) {
           if (index < state.repairRequests.length) {
+            final repairRequest = state.repairRequests[index];
+
             return _RepairRequestCard(
-              repairRequest: state.repairRequests[index],
+              repairRequest: repairRequest,
+              onTap: () {
+                context.push('${AppRoutes.repairRequests}/${repairRequest.id}');
+              },
             );
           }
 
@@ -87,71 +94,75 @@ class _RepairRequestListContent extends StatelessWidget {
 }
 
 class _RepairRequestCard extends StatelessWidget {
-  const _RepairRequestCard({required this.repairRequest});
+  const _RepairRequestCard({required this.repairRequest, required this.onTap});
 
   final RepairRequest repairRequest;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     return Card(
       clipBehavior: Clip.antiAlias,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Text(
-                    repairRequest.title,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Text(
+                      repairRequest.title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                _StatusBadge(label: _statusLabel(repairRequest.status.name)),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Text(
-              repairRequest.description,
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-            const SizedBox(height: 16),
-            _InformationRow(
-              icon: Icons.category_outlined,
-              text: _categoryLabel(repairRequest.category.name),
-            ),
-            const SizedBox(height: 8),
-            _InformationRow(
-              icon: Icons.flag_outlined,
-              text: 'Ưu tiên: ${_priorityLabel(repairRequest.priority.name)}',
-            ),
-            const SizedBox(height: 8),
-            _InformationRow(
-              icon: Icons.apartment_outlined,
-              text: repairRequest.campus,
-            ),
-            const SizedBox(height: 8),
-            _InformationRow(
-              icon: Icons.location_on_outlined,
-              text: repairRequest.location,
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'Ngày tạo: ${_formatDateTime(repairRequest.createdAt)}',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  const SizedBox(width: 12),
+                  _StatusBadge(label: _statusLabel(repairRequest.status.name)),
+                ],
               ),
-            ),
-          ],
+              const SizedBox(height: 12),
+              Text(
+                repairRequest.description,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+              const SizedBox(height: 16),
+              _InformationRow(
+                icon: Icons.category_outlined,
+                text: _categoryLabel(repairRequest.category.name),
+              ),
+              const SizedBox(height: 8),
+              _InformationRow(
+                icon: Icons.flag_outlined,
+                text: 'Ưu tiên: ${_priorityLabel(repairRequest.priority.name)}',
+              ),
+              const SizedBox(height: 8),
+              _InformationRow(
+                icon: Icons.apartment_outlined,
+                text: repairRequest.campus,
+              ),
+              const SizedBox(height: 8),
+              _InformationRow(
+                icon: Icons.location_on_outlined,
+                text: repairRequest.location,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Ngày tạo: ${_formatDateTime(repairRequest.createdAt)}',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
