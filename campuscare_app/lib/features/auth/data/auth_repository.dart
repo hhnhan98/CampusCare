@@ -1,5 +1,6 @@
 import 'auth_api_service.dart';
 import 'auth_token_storage.dart';
+import 'auth_user.dart';
 import 'login_request.dart';
 import 'login_response.dart';
 
@@ -24,6 +25,12 @@ class AuthRepository {
     await _tokenStorage.saveAccessToken(response.accessToken);
 
     return response;
+  }
+
+  Future<AuthUser> getCurrentUser() async {
+    final response = await _apiService.getCurrentUser();
+
+    return response.user;
   }
 
   Future<void> logout() async {

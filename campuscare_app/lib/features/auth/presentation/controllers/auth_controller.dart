@@ -11,14 +11,7 @@ final authControllerProvider = AsyncNotifierProvider<AuthController, AuthState>(
 class AuthController extends AsyncNotifier<AuthState> {
   @override
   Future<AuthState> build() async {
-    final repository = ref.read(authRepositoryProvider);
-    final hasAccessToken = repository.hasAccessToken();
-
-    return AuthState(
-      status: hasAccessToken
-          ? AuthStatus.authenticated
-          : AuthStatus.unauthenticated,
-    );
+    return _restoreAuthenticatedUser();
   }
 
   Future<void> login({
@@ -29,10 +22,14 @@ class AuthController extends AsyncNotifier<AuthState> {
 
     try {
       final repository = ref.read(authRepositoryProvider);
+      final response = await repository.login(
+        username: username,
+        password: password,
+      );
 
-      await repository.login(username: username, password: password);
-
-      state = const AsyncData(AuthState(status: AuthStatus.authenticated));
+      state = AsyncData(
+        AuthState(status: AuthStatus.authenticated, user: response.user),
+      );
     } catch (error) {
       state = AsyncData(
         AuthState(
@@ -53,17 +50,25 @@ class AuthController extends AsyncNotifier<AuthState> {
 
   Future<void> restoreSession() async {
     state = const AsyncLoading();
+    state = AsyncData(await _restoreAuthenticatedUser());
+  }
 
+  Future<AuthState> _restoreAuthenticatedUser() async {
     final repository = ref.read(authRepositoryProvider);
-    final hasAccessToken = repository.hasAccessToken();
 
-    state = AsyncData(
-      AuthState(
-        status: hasAccessToken
-            ? AuthStatus.authenticated
-            : AuthStatus.unauthenticated,
-      ),
-    );
+    if (!repository.hasAccessToken()) {
+      return const AuthState(status: AuthStatus.unauthenticated);
+    }
+
+    try {
+      final user = await repository.getCurrentUser();
+
+      return AuthState(status: AuthStatus.authenticated, user: user);
+    } catch (_) {
+      await repository.logout();
+
+      return const AuthState(status: AuthStatus.unauthenticated);
+    }
   }
 
   String _extractErrorMessage(Object error) {

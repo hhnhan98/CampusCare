@@ -1,46 +1,58 @@
+import 'package:campuscare_app/features/auth/data/auth_user.dart';
 import 'package:campuscare_app/features/auth/presentation/states/auth_state.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  const manager = AuthUser(
+    id: 2,
+    username: 'manager01',
+    fullName: 'Quản lý',
+    studentCode: 'MANAGER01',
+    role: 'MANAGER',
+  );
+
   group('AuthState', () {
     test('initial state', () {
       const state = AuthState();
 
       expect(state.status, AuthStatus.initial);
+      expect(state.user, isNull);
       expect(state.errorMessage, isNull);
       expect(state.isLoading, isFalse);
       expect(state.isAuthenticated, isFalse);
+      expect(state.isManager, isFalse);
     });
 
-    test('loading state', () {
-      const state = AuthState(status: AuthStatus.loading);
-
-      expect(state.isLoading, isTrue);
-    });
-
-    test('authenticated state', () {
-      const state = AuthState(status: AuthStatus.authenticated);
+    test('authenticated manager state', () {
+      const state = AuthState(status: AuthStatus.authenticated, user: manager);
 
       expect(state.isAuthenticated, isTrue);
+      expect(state.isManager, isTrue);
     });
 
-    test('copyWith', () {
-      const state = AuthState();
+    test('authenticated status without user is not authenticated', () {
+      const state = AuthState(status: AuthStatus.authenticated);
 
-      final next = state.copyWith(status: AuthStatus.loading);
-
-      expect(next.status, AuthStatus.loading);
+      expect(state.isAuthenticated, isFalse);
+      expect(state.isManager, isFalse);
     });
 
-    test('clear error', () {
+    test('copyWith can clear user and error', () {
       const state = AuthState(
         status: AuthStatus.failure,
-        errorMessage: 'Sai mật khẩu',
+        user: manager,
+        errorMessage: 'Lỗi',
       );
 
-      final cleared = state.copyWith(clearError: true);
+      final next = state.copyWith(
+        status: AuthStatus.unauthenticated,
+        clearUser: true,
+        clearError: true,
+      );
 
-      expect(cleared.errorMessage, isNull);
+      expect(next.status, AuthStatus.unauthenticated);
+      expect(next.user, isNull);
+      expect(next.errorMessage, isNull);
     });
   });
 }
